@@ -1,0 +1,15 @@
+{
+  "name": "Therapeutica Visitas",
+  "short_name": "Visitas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff8f5",
+  "theme_color": "#d97862",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
