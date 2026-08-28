@@ -79,7 +79,13 @@
   ];
 
   function translate(value) {
-    return replacements.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), value);
+    return replacements.reduce(
+      (text, [pattern, replacement]) => text.replace(pattern, (match) => {
+        if (match[0] !== match[0].toUpperCase()) return replacement;
+        return replacement[0].toUpperCase() + replacement.slice(1);
+      }),
+      value,
+    );
   }
 
   function translateElement(element) {
@@ -108,16 +114,21 @@
     });
   }
 
+  let translationScheduled = false;
+
   const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((node) => applyTerminology(node));
-      if (mutation.type === "characterData") applyTerminology(mutation.target);
-      if (mutation.type === "attributes") applyTerminology(mutation.target);
+    const hasNewContent = mutations.some((mutation) => mutation.addedNodes.length > 0);
+    if (!hasNewContent || translationScheduled) return;
+
+    translationScheduled = true;
+    window.requestAnimationFrame(() => {
+      translationScheduled = false;
+      applyTerminology();
     });
   });
 
   window.addEventListener("DOMContentLoaded", () => {
     applyTerminology();
-    observer.observe(document.body, { attributes: true, characterData: true, childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 })();
