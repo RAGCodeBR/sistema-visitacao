@@ -1,0 +1,42 @@
+:root {
+  --bg: #f6f6f7;
+  --surface: #ffffff;
+  --surface-2: #f0f0f2;
+  --coral: #ff321f;
+  --coral-2: #ff5a4b;
+  --rose: #ffd8d3;
+  --orange: #272832;
+  --text: #272832;
+  --muted: #63646b;
+  --line: #dedee2;
+  --ok: #3d7654;
+  --shadow: 0 18px 45px rgba(39, 40, 50, .13);
+}
+
+body { background: var(--bg); }
+.login { background: linear-gradient(150deg, #f6f6f7, #ffe2de 52%, #f6f6f7); }
+.login-card, .metric, .panel, .form-card { box-shadow: 0 10px 28px rgba(39, 40, 50, .09); }
+.logo-plate {
+  border-color: rgba(222, 222, 226, .95);
+  background: #fff;
+  box-shadow: 0 16px 38px rgba(39, 40, 50, .12);
+}
+.brand-mark { background: linear-gradient(135deg, var(--coral), #d52317); box-shadow: 0 10px 28px rgba(255, 50, 31, .30); }
+.brand-mark.small { font-size: 0; }
+.brand-mark.small::before { content: "A"; font-size: 18px; }
+.sidebar { background: #fff; }
+.topbar, .sticky-actions { background: rgba(255, 255, 255, .92); }
+.hero::after { background: linear-gradient(90deg, rgba(39, 40, 50, .86), rgba(39, 40, 50, .24)); }
+.hero .hero-logo { background: rgba(255, 255, 255, .94); }
+.hero span { color: #ffe1dd; }
+.primary { background: var(--coral); box-shadow: 0 10px 26px rgba(255, 50, 31, .25); }
+.primary:hover { background: #df291a; }
+.ghost, .sidebar nav button.active, .sidebar nav button:hover, .pill, .follow-up-text, .tab-strip button.active, .segment button.on { color: var(--coral); }
+.sidebar nav button.active, .sidebar nav button:hover, .ghost.small-action, .pill, .tab-strip button.active, .follow-up-box, .segment { background: var(--surface-2); }
+input:focus, select:focus, textarea:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(255, 50, 31, .16); }
+.progress i { background: linear-gradient(90deg, var(--coral), #272832); }
+.chip.selected { background: var(--coral); border-color: var(--coral); }
+.segment button.on { background: #fff; box-shadow: 0 4px 14px rgba(39, 40, 50, .12); }
+.reminder-card { background: linear-gradient(90deg, #fff1ef, #fff); }
+.request-row.overdue { border-color: #ffb4ab; background: linear-gradient(90deg, #fff0ee, #fff); }
+@media (max-width: 860px) { .scrim { background: rgba(39, 40, 50, .55); } .hero::after { background: linear-gradient(0deg, rgba(39, 40, 50, .88), rgba(39, 40, 50, .25)); } }

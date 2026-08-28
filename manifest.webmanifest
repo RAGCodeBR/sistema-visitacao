@@ -1,10 +1,10 @@
 {
-  "name": "Therapeutica Visitas",
-  "short_name": "Visitas",
+  "name": "AgroVerde — Gestão de Visitas",
+  "short_name": "AgroVerde",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fff8f5",
-  "theme_color": "#d97862",
+  "background_color": "#f6f6f7",
+  "theme_color": "#ff321f",
   "icons": [
     {
       "src": "/icon.svg",
