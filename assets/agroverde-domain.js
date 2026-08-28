@@ -3,6 +3,7 @@
   const replacements = [
     [/Therapeutica Pharmacia/gi, "AgroVerde"],
     [/Therapeutica Visitas/gi, "AgroVerde — Gestão de Visitas"],
+    [/Therapeutica/gi, "AgroVerde"],
     [/Administrador Therapeutica/gi, "Administrador AgroVerde"],
     [/representante@therapeutica\.com\.br/gi, "vendedor@agroverde.com.br"],
     [/Visitas médicas/gi, "Visitas a fazendas"],
