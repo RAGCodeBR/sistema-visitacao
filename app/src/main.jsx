@@ -29,7 +29,7 @@ function normalize(raw) {
   };
 }
 function loadData() { try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) return normalize(JSON.parse(saved)); return normalize(JSON.parse(localStorage.getItem(PREVIOUS_KEY) || "null")); } catch { return EMPTY; } }
-function Field({ label, value, onChange, required, type = "text", placeholder, min, step }) { return <><label>{label}</label><input type={type} value={value} onChange={(event) => onChange(event.target.value)} required={required} placeholder={placeholder} min={min} step={step} /></>; }
+function Field({ label, value, onChange, required, type = "text", placeholder, min, step }) { return <div className="source-field"><label>{label}</label><input type={type} value={value} onChange={(event) => onChange(event.target.value)} required={required} placeholder={placeholder} min={min} step={step} /></div>; }
 function Empty({ children }) { return <div className="empty"><p>{children}</p></div>; }
 function Panel({ title, children }) { return <section className="panel"><h3>{title}</h3>{children}</section>; }
 function Metric({ label, value, detail }) { return <article className="metric"><span>{label}</span><strong>{value}</strong><em>{detail}</em></article>; }
