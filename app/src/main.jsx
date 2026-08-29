@@ -5,169 +5,88 @@ import "../../assets/agroverde-theme.css";
 import "./source-app.css";
 import logoAgroVerde from "../../assets/therapeutica-logo-CzbDnZIh.png";
 
-const STORAGE_KEY = "agroverde-visitas-v2";
-const LEGACY_KEY = "therapeutica-visitas-demo-v1";
-const emptyData = { clients: [], farms: [], visits: [] };
-const productLines = ["Insumos", "Nutrição vegetal", "Sementes", "Fertilizantes", "Defensivos", "Irrigação", "Pecuária", "Outros"];
+const STORAGE_KEY = "agroverde-operacao-v3";
+const PREVIOUS_KEY = "agroverde-visitas-v2";
+const USERS = [{ id: "emily", name: "Emily", role: "ADMIN" }, { id: "seller-1", name: "Vendedor 1", role: "OPERACIONAL" }, { id: "seller-2", name: "Vendedor 2", role: "OPERACIONAL" }, { id: "seller-3", name: "Vendedor 3", role: "OPERACIONAL" }, { id: "seller-4", name: "Vendedor 4", role: "OPERACIONAL" }, { id: "assistant", name: "Assistente", role: "OPERACIONAL" }];
+const VISIT_TYPES = [["RELATIONSHIP", "Relacionamento"], ["PROSPECTING", "Prospecção de cliente"], ["CLOSING", "Fechamento de negócio"]];
+const NOT_DONE_REASONS = ["Cliente não estava", "Cliente remarcou", "Emergência do cliente", "Emergência do vendedor", "Outro"];
+const PRODUCT_LINES = ["Herbicida", "Semente", "Adubo", "Defensivo", "Nutrição vegetal", "Saúde animal", "Outro"];
+const EMPTY = { clients: [], farms: [], plans: [], visits: [] };
+const text = (value, max = 1000) => String(value ?? "").trim().slice(0, max);
+const idFor = (items) => Math.max(0, ...items.map((item) => Number(item.id) || 0)) + 1;
+const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const dateLabel = (value) => new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR");
+function mondayOf(value = new Date()) { const date = new Date(value); const day = date.getDay() || 7; date.setDate(date.getDate() - day + 1); date.setHours(0, 0, 0, 0); return date.toISOString().slice(0, 10); }
+function inWeek(value, monday) { const start = new Date(`${monday}T00:00:00`); const end = new Date(start); end.setDate(start.getDate() + 7); const date = new Date(`${String(value).slice(0, 10)}T00:00:00`); return date >= start && date < end; }
 
-function safeText(value, limit = 180) {
-  return String(value ?? "").trim().slice(0, limit);
-}
-
-function nextId(items) {
-  return Math.max(0, ...items.map((item) => Number(item.id) || 0)) + 1;
-}
-
-function normalizeData(raw) {
-  const source = raw && typeof raw === "object" ? raw : emptyData;
-  const clients = Array.isArray(source.clients) ? source.clients : [];
-  const farms = Array.isArray(source.farms) ? source.farms : [];
-  const visits = Array.isArray(source.visits) ? source.visits : [];
+function normalize(raw) {
+  const source = raw && typeof raw === "object" ? raw : EMPTY;
   return {
-    clients: clients.map((item, index) => ({
-      id: Number(item.id) || index + 1,
-      name: safeText(item.name), phone: safeText(item.phone, 40), whatsapp: safeText(item.whatsapp, 40),
-      city: safeText(item.city, 80), state: safeText(item.state, 2).toUpperCase(),
-      mainActivity: safeText(item.mainActivity, 100), notes: safeText(item.notes, 2000), createdAt: item.createdAt || new Date().toISOString(),
-    })).filter((item) => item.name),
-    farms: farms.map((item, index) => ({
-      id: Number(item.id) || index + 1, name: safeText(item.name), clientId: Number(item.clientId) || null,
-      city: safeText(item.city, 80), state: safeText(item.state, 2).toUpperCase(),
-      mainActivity: safeText(item.mainActivity, 100), notes: safeText(item.notes, 2000), createdAt: item.createdAt || new Date().toISOString(),
-    })).filter((item) => item.name),
-    visits: visits.map((item, index) => ({
-      id: Number(item.id) || index + 1, clientId: Number(item.clientId) || null, farmId: Number(item.farmId) || null,
-      visitedAt: item.visitedAt || new Date().toISOString(), objective: safeText(item.objective, 500),
-      productLine: safeText(item.productLine, 100), result: safeText(item.result, 2000), nextAction: safeText(item.nextAction, 500),
-      returnDate: safeText(item.returnDate, 20), createdAt: item.createdAt || new Date().toISOString(),
-    })),
+    clients: (source.clients || []).map((item, index) => ({ id: Number(item.id) || index + 1, name: text(item.name, 180), city: text(item.city, 80), state: text(item.state, 2).toUpperCase(), phone: text(item.phone, 40), whatsapp: text(item.whatsapp, 40), mainActivity: text(item.mainActivity, 100), notes: text(item.notes, 2000) })).filter((item) => item.name),
+    farms: (source.farms || []).map((item, index) => ({ id: Number(item.id) || index + 1, name: text(item.name, 180), clientId: Number(item.clientId) || null, city: text(item.city, 80), state: text(item.state, 2).toUpperCase(), mainActivity: text(item.mainActivity, 100), notes: text(item.notes, 2000) })).filter((item) => item.name),
+    plans: (source.plans || []).map((item, index) => ({ id: Number(item.id) || index + 1, userId: text(item.userId, 40), clientId: Number(item.clientId) || null, farmId: Number(item.farmId) || null, scheduledDate: text(item.scheduledDate, 10), status: ["PLANNED", "COMPLETED", "NOT_DONE"].includes(item.status) ? item.status : "PLANNED", notDoneReason: text(item.notDoneReason, 100), notDoneNote: text(item.notDoneNote, 500) })),
+    visits: (source.visits || []).map((item, index) => ({ id: Number(item.id) || index + 1, userId: text(item.userId, 40), planId: Number(item.planId) || null, clientId: Number(item.clientId) || null, farmId: Number(item.farmId) || null, visitedAt: item.visitedAt || new Date().toISOString(), developed: text(item.developed || item.result, 2000), types: Array.isArray(item.types) ? item.types.filter((type) => VISIT_TYPES.some(([id]) => id === type)) : [], businessType: text(item.businessType, 100), saleValue: Number(item.saleValue) || 0, nextAction: text(item.nextAction, 500) })),
   };
 }
-
-function migrateLegacy() {
-  try {
-    const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || "null");
-    if (!legacy || typeof legacy !== "object") return emptyData;
-    const clients = (legacy.doctors || []).map((item) => ({ id: item.id, name: item.name || item.fullName, phone: item.phone, whatsapp: item.whatsapp, city: item.city, state: item.state, mainActivity: item.specialty, notes: item.notes, createdAt: item.createdAt }));
-    const farms = (legacy.clinics || []).map((item) => ({ id: item.id, name: item.name, city: item.city, state: item.state, mainActivity: Array.isArray(item.specialties) ? item.specialties.join(", ") : item.specialties, notes: item.notes, createdAt: item.createdAt }));
-    const visits = (legacy.visits || []).map((item) => ({ id: item.id, clientId: item.doctorId, farmId: item.clinicId, visitedAt: item.visitedAt, objective: item.objective, productLine: Array.isArray(item.productLines) ? item.productLines.join(", ") : item.relatedLine, result: item.result, nextAction: item.nextAction, returnDate: item.returnDate, createdAt: item.createdAt }));
-    return normalizeData({ clients, farms, visits });
-  } catch {
-    return emptyData;
-  }
-}
-
-function loadData() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? normalizeData(JSON.parse(saved)) : migrateLegacy();
-  } catch {
-    return emptyData;
-  }
-}
-
-function Icon({ name }) {
-  const icons = { dashboard: "▦", visit: "↗", clients: "◉", farms: "⌂", history: "↺" };
-  return <span className="source-icon" aria-hidden="true">{icons[name] || "•"}</span>;
-}
-
-function Metric({ label, value, detail }) {
-  return <article className="metric"><span>{label}</span><strong>{value}</strong><em>{detail}</em></article>;
-}
-
-function Empty({ text }) {
-  return <div className="empty"><p>{text}</p></div>;
-}
+function loadData() { try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) return normalize(JSON.parse(saved)); return normalize(JSON.parse(localStorage.getItem(PREVIOUS_KEY) || "null")); } catch { return EMPTY; } }
+function Field({ label, value, onChange, required, type = "text", placeholder, min, step }) { return <><label>{label}</label><input type={type} value={value} onChange={(event) => onChange(event.target.value)} required={required} placeholder={placeholder} min={min} step={step} /></>; }
+function Empty({ children }) { return <div className="empty"><p>{children}</p></div>; }
+function Panel({ title, children }) { return <section className="panel"><h3>{title}</h3>{children}</section>; }
+function Metric({ label, value, detail }) { return <article className="metric"><span>{label}</span><strong>{value}</strong><em>{detail}</em></article>; }
 
 function App() {
-  const [data, setData] = useState(loadData);
-  const [view, setView] = useState("dashboard");
-  const [notice, setNotice] = useState("");
-
-  useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }, [data]);
-  useEffect(() => { if (!notice) return undefined; const timer = window.setTimeout(() => setNotice(""), 3500); return () => window.clearTimeout(timer); }, [notice]);
-
-  const clientsById = useMemo(() => new Map(data.clients.map((item) => [item.id, item])), [data.clients]);
-  const farmsById = useMemo(() => new Map(data.farms.map((item) => [item.id, item])), [data.farms]);
-  const today = new Date().toISOString().slice(0, 10);
-  const visitsToday = data.visits.filter((visit) => String(visit.visitedAt).slice(0, 10) === today).length;
-
-  function addClient(form) {
-    const client = { id: nextId(data.clients), ...form, createdAt: new Date().toISOString() };
-    setData((current) => ({ ...current, clients: [...current.clients, client] }));
-    setNotice("Cliente cadastrado com sucesso.");
-    setView("clients");
-  }
-
-  function addFarm(form) {
-    const farm = { id: nextId(data.farms), ...form, createdAt: new Date().toISOString() };
-    setData((current) => ({ ...current, farms: [...current.farms, farm] }));
-    setNotice("Fazenda cadastrada com sucesso.");
-    setView("farms");
-  }
-
-  function addVisit(form) {
-    const visit = { id: nextId(data.visits), ...form, createdAt: new Date().toISOString() };
-    setData((current) => ({ ...current, visits: [visit, ...current.visits] }));
-    setNotice("Visita registrada com sucesso.");
-    setView("history");
-  }
-
-  const nav = [["dashboard", "dashboard", "Início"], ["newVisit", "visit", "Nova visita"], ["clients", "clients", "Clientes"], ["farms", "farms", "Fazendas"], ["history", "history", "Histórico"]];
-  return <div className="app-shell source-app">
-    <aside className="sidebar"><div className="sidebar-head"><div className="brand-mark small">A</div><strong>AgroVerde</strong></div>
-      <nav>{nav.map(([id, icon, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)}><Icon name={icon} />{label}</button>)}</nav>
-    </aside>
-    <main className="main"><header className="topbar"><div><span>AGROVERDE</span><h2>{nav.find(([id]) => id === view)?.[2] || "Gestão de visitas"}</h2></div></header>
-      {notice && <div className="source-notice">{notice}</div>}
-      {view === "dashboard" && <Dashboard clients={data.clients} farms={data.farms} visits={data.visits} visitsToday={visitsToday} clientsById={clientsById} farmsById={farmsById} onView={setView} />}
-      {view === "clients" && <Clients clients={data.clients} onAdd={addClient} />}
-      {view === "farms" && <Farms farms={data.farms} clientsById={clientsById} onAdd={addFarm} clients={data.clients} />}
-      {view === "newVisit" && <VisitForm clients={data.clients} farms={data.farms} onSave={addVisit} />}
-      {view === "history" && <History visits={data.visits} clientsById={clientsById} farmsById={farmsById} />}
-    </main>
-  </div>;
+  const [data, setData] = useState(loadData); const [userId, setUserId] = useState("seller-1"); const [view, setView] = useState("dashboard"); const [activePlan, setActivePlan] = useState(null); const [notice, setNotice] = useState("");
+  const user = USERS.find((item) => item.id === userId) || USERS[0]; const isAdmin = user.role === "ADMIN";
+  const clientMap = useMemo(() => new Map(data.clients.map((item) => [item.id, item])), [data.clients]); const farmMap = useMemo(() => new Map(data.farms.map((item) => [item.id, item])), [data.farms]);
+  useEffect(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(data)), [data]); useEffect(() => { if (!notice) return undefined; const timer = setTimeout(() => setNotice(""), 3500); return () => clearTimeout(timer); }, [notice]);
+  const save = (updater, message) => { setData(updater); setNotice(message); }; const navigate = (next, plan = null) => { setActivePlan(plan); setView(next); };
+  const nav = [["dashboard", "▦", "Início"], ["schedule", "▤", "Programação"], ["newVisit", "↗", "Nova visita"], ["clients", "◉", "Clientes"], ["farms", "⌂", "Fazendas"], ...(isAdmin ? [["reports", "▥", "Relatórios"]] : [])];
+  return <div className="app-shell source-app"><aside className="sidebar"><div className="sidebar-head"><div className="brand-mark small">A</div><strong>AgroVerde</strong></div><label className="source-user-label">Usuário de demonstração</label><select className="source-user-select" value={userId} onChange={(event) => { setUserId(event.target.value); setView("dashboard"); }}>{USERS.map((item) => <option key={item.id} value={item.id}>{item.name}{item.role === "ADMIN" ? " — Admin" : ""}</option>)}</select><nav>{nav.map(([id, icon, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => navigate(id)}><span className="source-icon">{icon}</span>{label}</button>)}</nav><p className="source-demo-note">Perfis demonstrativos. A autenticação segura será conectada ao backend.</p></aside><main className="main"><header className="topbar"><div><span>{isAdmin ? "GESTÃO" : "OPERAÇÃO EM CAMPO"}</span><h2>{nav.find(([id]) => id === view)?.[2] || "AgroVerde"}</h2></div><strong className="source-user-name">{user.name}</strong></header>{notice && <div className="source-notice">{notice}</div>}{view === "dashboard" && <Dashboard data={data} user={user} isAdmin={isAdmin} clients={clientMap} farms={farmMap} onNavigate={navigate} />}{view === "schedule" && <Schedule data={data} user={user} isAdmin={isAdmin} clients={clientMap} farms={farmMap} onSave={save} onVisit={(plan) => navigate("newVisit", plan)} />}{view === "newVisit" && <VisitForm data={data} user={user} isAdmin={isAdmin} activePlan={activePlan} onSave={save} />}{view === "clients" && <Clients clients={data.clients} onSave={save} />}{view === "farms" && <Farms farms={data.farms} clients={data.clients} clientMap={clientMap} onSave={save} />}{view === "reports" && isAdmin && <Reports data={data} clients={clientMap} farms={farmMap} />}</main></div>;
 }
 
-function Dashboard({ clients, farms, visits, visitsToday, clientsById, farmsById, onView }) {
-  return <div className="content"><section className="source-hero"><img src={logoAgroVerde} alt="AgroVerde" /><div><span>Gestão em campo</span><h1>Visitas a fazendas com registro simples e organizado.</h1><button className="primary" onClick={() => onView("newVisit")}>Registrar visita</button></div></section>
-    <section className="metrics"><Metric label="Clientes" value={clients.length} detail="cadastrados" /><Metric label="Fazendas" value={farms.length} detail="na base" /><Metric label="Visitas hoje" value={visitsToday} detail="realizadas" /><Metric label="Visitas" value={visits.length} detail="registradas" /></section>
-    <section className="panel"><h3>Visitas recentes</h3>{visits.length ? visits.slice(0, 5).map((visit) => <article className="row-card" key={visit.id}><div><strong>{clientsById.get(visit.clientId)?.name || "Cliente não informado"}</strong><span>{farmsById.get(visit.farmId)?.name || "Fazenda não informada"} · {formatDate(visit.visitedAt)}</span></div><small className="pill">{visit.productLine || "Visita"}</small></article>) : <Empty text="Nenhuma visita registrada ainda." />}</section>
-  </div>;
+function Dashboard({ data, user, isAdmin, clients, farms, onNavigate }) {
+  const plans = data.plans.filter((item) => isAdmin || item.userId === user.id); const visits = data.visits.filter((item) => isAdmin || item.userId === user.id); const today = new Date().toISOString().slice(0, 10); const pending = plans.filter((item) => item.status === "PLANNED");
+  return <div className="content"><section className="source-hero"><img src={logoAgroVerde} alt="AgroVerde" /><div><span>Gestão em campo</span><h1>{isAdmin ? "Acompanhe a operação comercial da AgroVerde." : "Planeje e registre as visitas da sua semana."}</h1><button className="primary" onClick={() => onNavigate(isAdmin ? "reports" : "schedule")}>{isAdmin ? "Ver relatórios" : "Ver programação"}</button></div></section><section className="metrics"><Metric label={isAdmin ? "Clientes" : "Minha programação"} value={isAdmin ? data.clients.length : plans.length} detail={isAdmin ? "cadastros compartilhados" : "visitas na semana"} /><Metric label="Pendentes" value={pending.length} detail="programadas" /><Metric label="Visitas hoje" value={visits.filter((item) => String(item.visitedAt).slice(0, 10) === today).length} detail="realizadas" /><Metric label="Fazendas" value={data.farms.length} detail="cadastros compartilhados" /></section><Panel title={isAdmin ? "Últimas visitas registradas" : "Próximas visitas"}>{(isAdmin ? visits.map((item) => ({ ...item, date: item.visitedAt })) : pending.map((item) => ({ ...item, date: item.scheduledDate }))).sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 5).map((item) => <article className="row-card" key={item.id}><div><strong>{clients.get(item.clientId)?.name || "Cliente não informado"}</strong><span>{farms.get(item.farmId)?.name || "Fazenda não informada"} · {dateLabel(item.date)}</span></div><small className="pill">{isAdmin ? "realizada" : "programada"}</small></article>) || <Empty>Nenhum registro para exibir.</Empty>}</Panel></div>;
 }
 
-function Clients({ clients, onAdd }) {
+function ScheduleLegacy({ data, user, isAdmin, clients, farms, onSave, onVisit }) {
+  const [week, setWeek] = useState(mondayOf()); const [open, setOpen] = useState(false); const [editing, setEditing] = useState(null); const [form, setForm] = useState({ userId: isAdmin ? "seller-1" : user.id, clientId: "", farmId: "", scheduledDate: mondayOf() }); const [notDone, setNotDone] = useState(null); const [reason, setReason] = useState(""); const [note, setNote] = useState("");
+  const plans = data.plans.filter((item) => inWeek(item.scheduledDate, week) && (isAdmin || item.userId === user.id)).sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate)); const eligibleFarms = data.farms.filter((farm) => !form.clientId || !farm.clientId || farm.clientId === Number(form.clientId));
+  function add(event) { event.preventDefault(); if (!form.clientId || !form.scheduledDate) return; const plan = { id: editing?.id || idFor(data.plans), userId: form.userId, clientId: Number(form.clientId), farmId: Number(form.farmId) || null, scheduledDate: form.scheduledDate, status: editing?.status || "PLANNED", notDoneReason: editing?.notDoneReason || "", notDoneNote: editing?.notDoneNote || "" }; onSave((current) => ({ ...current, plans: editing ? current.plans.map((item) => item.id === editing.id ? plan : item) : [...current.plans, plan] }), editing ? "Programação atualizada." : "Visita adicionada à programação."); setOpen(false); setEditing(null); }
+  function fail(event) { event.preventDefault(); if (!reason) return; onSave((current) => ({ ...current, plans: current.plans.map((plan) => plan.id === notDone.id ? { ...plan, status: "NOT_DONE", notDoneReason: reason, notDoneNote: reason === "Outro" ? text(note, 500) : "" } : plan) }), "Visita marcada como não realizada."); setNotDone(null); setReason(""); setNote(""); }
+  return <div className="content"><section className="toolbar source-week-bar"><label>Semana de</label><input type="date" value={week} onChange={(event) => setWeek(mondayOf(`${event.target.value}T12:00:00`))} /><button className="primary" onClick={() => setOpen(!open)}>Adicionar visita</button></section>{open && <form className="form-card inline-form" onSubmit={add}><h3>Programar visita</h3>{isAdmin && <><label>Vendedor responsável</label><select value={form.userId} onChange={(event) => setForm({ ...form, userId: event.target.value })}>{USERS.filter((item) => item.role === "OPERACIONAL").map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></>}<label>Cliente</label><select required value={form.clientId} onChange={(event) => setForm({ ...form, clientId: event.target.value, farmId: "" })}><option value="">Selecione</option>{data.clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><label>Fazenda</label><select value={form.farmId} onChange={(event) => setForm({ ...form, farmId: event.target.value })}><option value="">Não informar agora</option>{eligibleFarms.map((farm) => <option key={farm.id} value={farm.id}>{farm.name}</option>)}</select><Field label="Data programada" type="date" required value={form.scheduledDate} onChange={(scheduledDate) => setForm({ ...form, scheduledDate })} /><button className="primary" type="submit">Salvar programação</button></form>}<Panel title="Visitas programadas">{plans.length ? plans.map((plan) => <article className="row-card" key={plan.id}><div><strong>{clients.get(plan.clientId)?.name || "Cliente não informado"}</strong><span>{farms.get(plan.farmId)?.name || "Fazenda não informada"} · {dateLabel(plan.scheduledDate)}</span>{plan.status === "NOT_DONE" && <span className="source-warning">Não realizada: {plan.notDoneReason}{plan.notDoneNote ? ` — ${plan.notDoneNote}` : ""}</span>}</div><div className="row-actions">{plan.status === "PLANNED" && <><button className="ghost small-action" onClick={() => onVisit(plan)}>Realizada</button><button className="icon-btn danger" title="Não realizada" onClick={() => setNotDone(plan)}>×</button></>}{plan.status === "COMPLETED" && <small className="pill realizada">realizada</small>}</div></article>) : <Empty>Nenhuma visita programada nesta semana.</Empty>}</Panel>{notDone && <form className="form-card inline-form" onSubmit={fail}><h3>Motivo da visita não realizada</h3><label>Motivo obrigatório</label><select required value={reason} onChange={(event) => setReason(event.target.value)}><option value="">Selecione</option>{NOT_DONE_REASONS.map((item) => <option key={item}>{item}</option>)}</select>{reason === "Outro" && <><label>Descreva o motivo</label><textarea required value={note} onChange={(event) => setNote(event.target.value)} /></>}<button className="primary" type="submit">Confirmar</button></form>}</div>;
+}
+
+function VisitForm({ data, user, isAdmin, activePlan, onSave }) {
+  const plan = activePlan || {}; const [form, setForm] = useState({ planId: plan.id || "", userId: plan.userId || (isAdmin ? "seller-1" : user.id), clientId: plan.clientId || "", farmId: plan.farmId || "", visitedAt: new Date().toISOString().slice(0, 16), developed: "", types: [], businessType: "", saleValue: "", nextAction: "" }); const closing = form.types.includes("CLOSING"); const farms = data.farms.filter((farm) => !form.clientId || !farm.clientId || farm.clientId === Number(form.clientId));
+  const toggle = (type) => setForm({ ...form, types: form.types.includes(type) ? form.types.filter((item) => item !== type) : [...form.types, type] });
+  function submit(event) { event.preventDefault(); if (!form.clientId || !form.developed || !form.types.length) return; const visit = { id: idFor(data.visits), userId: form.userId, planId: Number(form.planId) || null, clientId: Number(form.clientId), farmId: Number(form.farmId) || null, visitedAt: new Date(form.visitedAt).toISOString(), developed: text(form.developed, 2000), types: form.types, businessType: closing ? text(form.businessType, 100) : "", saleValue: closing ? Number(form.saleValue) || 0 : 0, nextAction: text(form.nextAction, 500) }; onSave((current) => ({ ...current, visits: [visit, ...current.visits], plans: current.plans.map((item) => item.id === visit.planId ? { ...item, status: "COMPLETED" } : item) }), "Visita registrada com sucesso."); }
+  return <div className="content visit-flow"><form className="form-card" onSubmit={submit}><h3>Registrar visita</h3>{isAdmin && <><label>Vendedor responsável</label><select value={form.userId} onChange={(event) => setForm({ ...form, userId: event.target.value })}>{USERS.filter((item) => item.role === "OPERACIONAL").map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></>}<label>Data e hora da visita</label><input type="datetime-local" required value={form.visitedAt} onChange={(event) => setForm({ ...form, visitedAt: event.target.value })} /><label>Nome do cliente</label><select required value={form.clientId} onChange={(event) => setForm({ ...form, clientId: event.target.value, farmId: "" })}><option value="">Selecione</option>{data.clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><label>Nome da propriedade / fazenda</label><select value={form.farmId} onChange={(event) => setForm({ ...form, farmId: event.target.value })}><option value="">Não informar</option>{farms.map((farm) => <option key={farm.id} value={farm.id}>{farm.name}</option>)}</select><label>O que foi desenvolvido / oferecido</label><textarea required value={form.developed} onChange={(event) => setForm({ ...form, developed: event.target.value })} placeholder="Descreva o atendimento, produtos e oportunidades." /><label>Tipo de visita</label><div className="checks source-checks">{VISIT_TYPES.map(([type, label]) => <label key={type}><input type="checkbox" checked={form.types.includes(type)} onChange={() => toggle(type)} /> {label}</label>)}</div>{closing && <div className="embedded-form"><h3>Fechamento de negócio</h3><label>Tipo de negócio</label><select value={form.businessType} onChange={(event) => setForm({ ...form, businessType: event.target.value })}><option value="">Selecione</option>{PRODUCT_LINES.map((item) => <option key={item}>{item}</option>)}</select><Field label="Valor final da venda (R$)" type="number" min="0" step="0.01" value={form.saleValue} onChange={(saleValue) => setForm({ ...form, saleValue })} /></div>}<Field label="Próxima ação" value={form.nextAction} onChange={(nextAction) => setForm({ ...form, nextAction })} /><button className="primary wide" type="submit">Salvar visita</button></form></div>;
+}
+
+function Clients({ clients, onSave }) { const [open, setOpen] = useState(false); const [form, setForm] = useState({ name: "", phone: "", whatsapp: "", city: "", state: "MT", mainActivity: "", notes: "" }); function submit(event) { event.preventDefault(); if (!text(form.name)) return; onSave((current) => ({ ...current, clients: [...current.clients, { id: idFor(clients), ...form, name: text(form.name, 180) }] }), "Cliente cadastrado com sucesso."); setOpen(false); } return <div className="content"><section className="toolbar"><button className="primary" onClick={() => setOpen(!open)}>Novo cliente</button></section>{open && <form className="form-card inline-form" onSubmit={submit}><h3>Novo cliente</h3><Field label="Nome ou razão social" required value={form.name} onChange={(name) => setForm({ ...form, name })} /><div className="source-grid"><Field label="Telefone" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} /><Field label="WhatsApp" value={form.whatsapp} onChange={(whatsapp) => setForm({ ...form, whatsapp })} /></div><div className="source-grid"><Field label="Cidade" value={form.city} onChange={(city) => setForm({ ...form, city })} /><Field label="UF" value={form.state} onChange={(state) => setForm({ ...form, state })} /></div><Field label="Atividade principal" value={form.mainActivity} onChange={(mainActivity) => setForm({ ...form, mainActivity })} /><label>Observações</label><textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /><button className="primary" type="submit">Salvar cliente</button></form>}<Panel title="Clientes compartilhados">{clients.length ? clients.map((client) => <article className="row-card" key={client.id}><div><strong>{client.name}</strong><span>{[client.mainActivity, client.city, client.state].filter(Boolean).join(" · ") || "Sem dados complementares"}</span></div><small className="pill">ativo</small></article>) : <Empty>Nenhum cliente cadastrado ainda.</Empty>}</Panel></div>; }
+function Farms({ farms, clients, clientMap, onSave }) { const [open, setOpen] = useState(false); const [form, setForm] = useState({ name: "", clientId: "", city: "", state: "MT", mainActivity: "" }); function submit(event) { event.preventDefault(); if (!text(form.name)) return; onSave((current) => ({ ...current, farms: [...current.farms, { id: idFor(farms), ...form, clientId: Number(form.clientId) || null, name: text(form.name, 180) }] }), "Fazenda cadastrada com sucesso."); setOpen(false); } return <div className="content"><section className="toolbar"><button className="primary" onClick={() => setOpen(!open)}>Nova fazenda</button></section>{open && <form className="form-card inline-form" onSubmit={submit}><h3>Nova fazenda</h3><Field label="Nome da fazenda" required value={form.name} onChange={(name) => setForm({ ...form, name })} /><label>Cliente responsável</label><select value={form.clientId} onChange={(event) => setForm({ ...form, clientId: event.target.value })}><option value="">Não vincular agora</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><div className="source-grid"><Field label="Cidade" value={form.city} onChange={(city) => setForm({ ...form, city })} /><Field label="UF" value={form.state} onChange={(state) => setForm({ ...form, state })} /></div><Field label="Atividade principal" value={form.mainActivity} onChange={(mainActivity) => setForm({ ...form, mainActivity })} /><button className="primary" type="submit">Salvar fazenda</button></form>}<Panel title="Fazendas compartilhadas">{farms.length ? farms.map((farm) => <article className="row-card" key={farm.id}><div><strong>{farm.name}</strong><span>{[clientMap.get(farm.clientId)?.name, farm.mainActivity, farm.city].filter(Boolean).join(" · ") || "Sem dados complementares"}</span></div><small className="pill">ativa</small></article>) : <Empty>Nenhuma fazenda cadastrada ainda.</Empty>}</Panel></div>; }
+function Reports({ data, clients, farms }) { const [week, setWeek] = useState(mondayOf()); const visits = data.visits.filter((visit) => inWeek(visit.visitedAt, week)); const by = (type) => visits.filter((visit) => visit.types.includes(type)); const deals = by("CLOSING").filter((visit) => visit.saleValue > 0); const total = deals.reduce((sum, visit) => sum + visit.saleValue, 0); return <div className="content"><section className="toolbar source-week-bar"><label>Semana de</label><input type="date" value={week} onChange={(event) => setWeek(mondayOf(`${event.target.value}T12:00:00`))} /></section><section className="metrics"><Metric label="Clientes visitados" value={new Set(visits.map((visit) => visit.clientId).filter(Boolean)).size} detail="na semana" /><Metric label="Relacionamento" value={by("RELATIONSHIP").length} detail="visitas" /><Metric label="Prospecção" value={by("PROSPECTING").length} detail="visitas" /><Metric label="Fechamentos" value={by("CLOSING").length} detail="visitas" /></section><section className="metrics source-deals"><Metric label="Negócios fechados" value={deals.length} detail="com valor informado" /><Metric label="Valor consolidado" value={money.format(total)} detail="em vendas" /></section><Panel title="Visitas da semana">{visits.length ? visits.map((visit) => <article className="row-card" key={visit.id}><div><strong>{clients.get(visit.clientId)?.name || "Cliente não informado"}</strong><span>{farms.get(visit.farmId)?.name || "Fazenda não informada"} · {dateLabel(visit.visitedAt)} · {VISIT_TYPES.filter(([id]) => visit.types.includes(id)).map(([, label]) => label).join(", ")}</span>{visit.saleValue > 0 && <span className="follow-up-text">Venda: {money.format(visit.saleValue)} {visit.businessType ? `— ${visit.businessType}` : ""}</span>}</div></article>) : <Empty>Nenhuma visita registrada nesta semana.</Empty>}</Panel></div>; }
+
+function Schedule({ data, user, isAdmin, clients, farms, onSave, onVisit }) {
+  const [week, setWeek] = useState(mondayOf());
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", whatsapp: "", city: "", state: "MT", mainActivity: "", notes: "" });
-  function submit(event) { event.preventDefault(); if (!safeText(form.name)) return; onAdd({ ...form, name: safeText(form.name), phone: safeText(form.phone), whatsapp: safeText(form.whatsapp), city: safeText(form.city), state: safeText(form.state, 2), mainActivity: safeText(form.mainActivity), notes: safeText(form.notes, 2000) }); }
-  return <div className="content"><section className="toolbar"><div className="search"><input placeholder="Buscar cliente" aria-label="Buscar cliente" /></div><button className="primary" onClick={() => setOpen(!open)}>Novo cliente</button></section>
-    {open && <form className="form-card inline-form" onSubmit={submit}><h3>Novo cliente</h3><Field label="Nome ou razão social" value={form.name} onChange={(name) => setForm({ ...form, name })} required /><div className="source-grid"><Field label="Telefone" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} /><Field label="WhatsApp" value={form.whatsapp} onChange={(whatsapp) => setForm({ ...form, whatsapp })} /></div><div className="source-grid"><Field label="Cidade" value={form.city} onChange={(city) => setForm({ ...form, city })} /><Field label="UF" value={form.state} onChange={(state) => setForm({ ...form, state })} maxLength={2} /></div><Field label="Atividade principal" value={form.mainActivity} onChange={(mainActivity) => setForm({ ...form, mainActivity })} placeholder="Ex.: soja, milho, pecuária" /><TextField label="Observações" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} /><button className="primary" type="submit">Salvar cliente</button></form>}
-    <section className="panel"><h3>Clientes</h3>{clients.length ? clients.map((client) => <article className="row-card" key={client.id}><div><strong>{client.name}</strong><span>{[client.mainActivity, client.city, client.state].filter(Boolean).join(" · ") || "Sem dados complementares"}</span></div><small className="pill">ativo</small></article>) : <Empty text="Nenhum cliente cadastrado ainda." />}</section>
-  </div>;
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ userId: isAdmin ? "seller-1" : user.id, clientId: "", farmId: "", scheduledDate: mondayOf() });
+  const [notDone, setNotDone] = useState(null);
+  const [reason, setReason] = useState("");
+  const [note, setNote] = useState("");
+  const plans = data.plans.filter((item) => inWeek(item.scheduledDate, week) && (isAdmin || item.userId === user.id)).sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
+  const eligibleFarms = data.farms.filter((farm) => !form.clientId || !farm.clientId || farm.clientId === Number(form.clientId));
+  const resetForm = () => { setEditing(null); setForm({ userId: isAdmin ? "seller-1" : user.id, clientId: "", farmId: "", scheduledDate: week }); };
+  function submitPlan(event) {
+    event.preventDefault(); if (!form.clientId || !form.scheduledDate) return;
+    const plan = { id: editing?.id || idFor(data.plans), userId: form.userId, clientId: Number(form.clientId), farmId: Number(form.farmId) || null, scheduledDate: form.scheduledDate, status: editing?.status || "PLANNED", notDoneReason: editing?.notDoneReason || "", notDoneNote: editing?.notDoneNote || "" };
+    onSave((current) => ({ ...current, plans: editing ? current.plans.map((item) => item.id === editing.id ? plan : item) : [...current.plans, plan] }), editing ? "Programação atualizada." : "Visita adicionada à programação."); setOpen(false); resetForm();
+  }
+  function edit(plan) { setEditing(plan); setForm({ userId: plan.userId, clientId: String(plan.clientId || ""), farmId: String(plan.farmId || ""), scheduledDate: plan.scheduledDate }); setOpen(true); }
+  function markNotDone(event) { event.preventDefault(); if (!reason) return; onSave((current) => ({ ...current, plans: current.plans.map((item) => item.id === notDone.id ? { ...item, status: "NOT_DONE", notDoneReason: reason, notDoneNote: reason === "Outro" ? text(note, 500) : "" } : item) }), "Visita marcada como não realizada."); setNotDone(null); setReason(""); setNote(""); }
+  return <div className="content"><section className="toolbar source-week-bar"><label>Semana de</label><input type="date" value={week} onChange={(event) => setWeek(mondayOf(`${event.target.value}T12:00:00`))} /><button className="primary" onClick={() => { resetForm(); setOpen(true); }}>Adicionar visita</button></section>{open && <form className="form-card inline-form" onSubmit={submitPlan}><h3>{editing ? "Alterar programação" : "Programar visita"}</h3>{isAdmin && <><label>Vendedor responsável</label><select value={form.userId} onChange={(event) => setForm({ ...form, userId: event.target.value })}>{USERS.filter((item) => item.role === "OPERACIONAL").map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></>}<label>Cliente</label><select required value={form.clientId} onChange={(event) => setForm({ ...form, clientId: event.target.value, farmId: "" })}><option value="">Selecione</option>{data.clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><label>Fazenda</label><select value={form.farmId} onChange={(event) => setForm({ ...form, farmId: event.target.value })}><option value="">Não informar agora</option>{eligibleFarms.map((farm) => <option key={farm.id} value={farm.id}>{farm.name}</option>)}</select><Field label="Data programada" type="date" required value={form.scheduledDate} onChange={(scheduledDate) => setForm({ ...form, scheduledDate })} /><button className="primary" type="submit">{editing ? "Salvar alteração" : "Salvar programação"}</button></form>}<Panel title="Visitas programadas">{plans.length ? plans.map((plan) => <article className="row-card" key={plan.id}><div><strong>{clients.get(plan.clientId)?.name || "Cliente não informado"}</strong><span>{farms.get(plan.farmId)?.name || "Fazenda não informada"} · {dateLabel(plan.scheduledDate)}</span>{plan.status === "NOT_DONE" && <span className="source-warning">Não realizada: {plan.notDoneReason}{plan.notDoneNote ? ` — ${plan.notDoneNote}` : ""}</span>}</div><div className="row-actions">{plan.status === "PLANNED" && <><button className="ghost small-action" onClick={() => edit(plan)}>Editar</button><button className="ghost small-action" onClick={() => onVisit(plan)}>Realizada</button><button className="icon-btn danger" title="Não realizada" onClick={() => setNotDone(plan)}>×</button></>}{plan.status === "COMPLETED" && <small className="pill realizada">realizada</small>}</div></article>) : <Empty>Nenhuma visita programada nesta semana.</Empty>}</Panel>{notDone && <form className="form-card inline-form" onSubmit={markNotDone}><h3>Motivo da visita não realizada</h3><label>Motivo obrigatório</label><select required value={reason} onChange={(event) => setReason(event.target.value)}><option value="">Selecione</option>{NOT_DONE_REASONS.map((item) => <option key={item}>{item}</option>)}</select>{reason === "Outro" && <><label>Descreva o motivo</label><textarea required value={note} onChange={(event) => setNote(event.target.value)} /></>}<button className="primary" type="submit">Confirmar</button></form>}</div>;
 }
-
-function Farms({ farms, clients, clientsById, onAdd }) {
-  const [open, setOpen] = useState(false); const [form, setForm] = useState({ name: "", clientId: "", city: "", state: "MT", mainActivity: "", notes: "" });
-  function submit(event) { event.preventDefault(); if (!safeText(form.name)) return; onAdd({ ...form, name: safeText(form.name), clientId: Number(form.clientId) || null, city: safeText(form.city), state: safeText(form.state, 2), mainActivity: safeText(form.mainActivity), notes: safeText(form.notes, 2000) }); }
-  return <div className="content"><section className="toolbar"><div className="search"><input placeholder="Buscar fazenda" aria-label="Buscar fazenda" /></div><button className="primary" onClick={() => setOpen(!open)}>Nova fazenda</button></section>
-    {open && <form className="form-card inline-form" onSubmit={submit}><h3>Nova fazenda</h3><Field label="Nome da fazenda" value={form.name} onChange={(name) => setForm({ ...form, name })} required /><label>Cliente responsável</label><select value={form.clientId} onChange={(event) => setForm({ ...form, clientId: event.target.value })}><option value="">Não vincular agora</option>{clients.map((client) => <option value={client.id} key={client.id}>{client.name}</option>)}</select><div className="source-grid"><Field label="Cidade" value={form.city} onChange={(city) => setForm({ ...form, city })} /><Field label="UF" value={form.state} onChange={(state) => setForm({ ...form, state })} maxLength={2} /></div><Field label="Atividade principal" value={form.mainActivity} onChange={(mainActivity) => setForm({ ...form, mainActivity })} /><TextField label="Observações" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} /><button className="primary" type="submit">Salvar fazenda</button></form>}
-    <section className="panel"><h3>Fazendas</h3>{farms.length ? farms.map((farm) => <article className="row-card" key={farm.id}><div><strong>{farm.name}</strong><span>{[clientsById.get(farm.clientId)?.name, farm.mainActivity, farm.city].filter(Boolean).join(" · ") || "Sem dados complementares"}</span></div><small className="pill">ativa</small></article>) : <Empty text="Nenhuma fazenda cadastrada ainda." />}</section>
-  </div>;
-}
-
-function VisitForm({ clients, farms, onSave }) {
-  const [form, setForm] = useState({ clientId: "", farmId: "", visitedAt: new Date().toISOString().slice(0, 16), objective: "", productLine: "", result: "", nextAction: "", returnDate: "" });
-  function submit(event) { event.preventDefault(); if (!form.clientId || !safeText(form.objective)) return; onSave({ ...form, clientId: Number(form.clientId), farmId: Number(form.farmId) || null, visitedAt: new Date(form.visitedAt).toISOString(), objective: safeText(form.objective, 500), productLine: safeText(form.productLine), result: safeText(form.result, 2000), nextAction: safeText(form.nextAction, 500), returnDate: safeText(form.returnDate, 20) }); }
-  const eligibleFarms = farms.filter((farm) => !form.clientId || !farm.clientId || farm.clientId === Number(form.clientId));
-  return <div className="content visit-flow"><form className="form-card" onSubmit={submit}><h3>Registrar nova visita</h3><label>Cliente visitado</label><select value={form.clientId} required onChange={(event) => setForm({ ...form, clientId: event.target.value, farmId: "" })}><option value="">Selecione um cliente</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><label>Fazenda</label><select value={form.farmId} onChange={(event) => setForm({ ...form, farmId: event.target.value })}><option value="">Não informada</option>{eligibleFarms.map((farm) => <option key={farm.id} value={farm.id}>{farm.name}</option>)}</select><label>Data e hora</label><input type="datetime-local" value={form.visitedAt} onChange={(event) => setForm({ ...form, visitedAt: event.target.value })} required /><Field label="Objetivo da visita" value={form.objective} onChange={(objective) => setForm({ ...form, objective })} placeholder="Ex.: apresentar soluções para a safra" required /><label>Linha de produtos</label><select value={form.productLine} onChange={(event) => setForm({ ...form, productLine: event.target.value })}><option value="">Selecione</option>{productLines.map((line) => <option key={line}>{line}</option>)}</select><TextField label="Resultado da visita" value={form.result} onChange={(result) => setForm({ ...form, result })} /><Field label="Próxima ação" value={form.nextAction} onChange={(nextAction) => setForm({ ...form, nextAction })} /><label>Retorno</label><input type="date" value={form.returnDate} onChange={(event) => setForm({ ...form, returnDate: event.target.value })} /><button className="primary wide" type="submit">Salvar visita</button></form></div>;
-}
-
-function History({ visits, clientsById, farmsById }) {
-  return <div className="content"><section className="panel"><h3>Histórico de visitas</h3>{visits.length ? visits.map((visit) => <article className="row-card" key={visit.id}><div><strong>{clientsById.get(visit.clientId)?.name || "Cliente não informado"}</strong><span>{[farmsById.get(visit.farmId)?.name, visit.objective, formatDate(visit.visitedAt)].filter(Boolean).join(" · ")}</span>{visit.nextAction && <span className="follow-up-text">Próxima ação: {visit.nextAction}</span>}</div><small className="pill">{visit.productLine || "Visita"}</small></article>) : <Empty text="Nenhuma visita registrada ainda." />}</section></div>;
-}
-
-function Field({ label, value, onChange, placeholder, required, maxLength }) { return <><label>{label}</label><input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} maxLength={maxLength} /></>; }
-function TextField({ label, value, onChange }) { return <><label>{label}</label><textarea value={value} onChange={(event) => onChange(event.target.value)} /></>; }
-function formatDate(value) { const date = new Date(value); return Number.isNaN(date.valueOf()) ? "Data não informada" : date.toLocaleDateString("pt-BR"); }
 
 createRoot(document.getElementById("root")).render(<React.StrictMode><App /></React.StrictMode>);
