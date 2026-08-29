@@ -121,12 +121,24 @@
 
   function applyTerminology(root = document.body) {
     if (root) translateElement(root);
+    hideRegistrationDocumentField();
     updateSidebarIcons();
     document.querySelectorAll('input[type="email"]').forEach((input) => {
       if (input.value === "representante@therapeutica.com.br") {
         input.value = "vendedor@agroverde.com.br";
         input.dispatchEvent(new Event("input", { bubbles: true }));
       }
+    });
+  }
+
+  function hideRegistrationDocumentField() {
+    document.querySelectorAll("label").forEach((label) => {
+      const labelText = label.textContent.trim();
+      if (!/^(crm|cro|conselho|documento)\b/i.test(labelText)) return;
+
+      label.hidden = true;
+      const field = label.nextElementSibling;
+      if (field && /^(INPUT|SELECT)$/i.test(field.tagName)) field.hidden = true;
     });
   }
 

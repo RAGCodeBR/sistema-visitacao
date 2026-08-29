@@ -2,11 +2,18 @@
   "name": "sistema-visitacao",
   "version": "1.0.0",
   "private": true,
-  "description": "Demo estática do Therapeutica Visitas.",
+  "description": "Sistema de visitas comerciais da AgroVerde.",
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:source": "vite --config vite.source.config.js",
+    "build:source": "vite build --config vite.source.config.js",
+    "preview:source": "vite preview --config vite.source.config.js"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "vite": "^7.1.7"
