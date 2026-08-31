@@ -9,6 +9,7 @@ import "./mobile-navigation.css";
 import "./user-menu.css";
 import "./user-menu-refinement.css";
 import "./schedule-spacing.css";
+import "./font.css";
 import logoAgroVerde from "../../assets/therapeutica-logo-CzbDnZIh.png";
 import { BR_STATES, CITIES_BY_STATE } from "./brazil-locations";
 
