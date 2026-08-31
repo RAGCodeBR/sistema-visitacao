@@ -1,0 +1,11 @@
+.mobile-nav-toggle { display: none; }
+@media (max-width: 860px) {
+  .mobile-nav-toggle { width: 42px; height: 42px; display: inline-flex; flex: 0 0 42px; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 1px solid #d8e0ea; border-radius: 10px; background: #fff; box-shadow: 0 3px 10px rgba(28, 39, 56, .08); }
+  .mobile-nav-toggle i { display: block; width: 18px; height: 2px; border-radius: 2px; background: #27364a; }
+  .topbar { justify-content: flex-start; }
+  .topbar > div { flex: 1; min-width: 0; }
+  .topbar .source-user-select { margin-left: auto; }
+  .sidebar { left: 0; width: min(60vw, 220px); z-index: 30; }
+  .scrim { display: block; position: fixed; inset: 0; z-index: 25; border: 0; background: rgba(15, 23, 42, .46); cursor: default; }
+}
+@media (max-width: 420px) { .topbar { gap: 8px; padding: 12px 14px; } .topbar h2 { font-size: 20px; } .topbar .source-user-select { min-width: 118px; } }

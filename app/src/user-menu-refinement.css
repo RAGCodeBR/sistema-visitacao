@@ -1,0 +1,11 @@
+.user-menu-trigger, .user-menu-trigger span { color: #161b22; }
+.user-menu-trigger b { width: 8px; height: 8px; flex: 0 0 8px; border-right: 2px solid #161b22; border-bottom: 2px solid #161b22; color: transparent; font-size: 0; transform: rotate(45deg) translate(-2px, -2px); }
+.user-menu-trigger[aria-expanded="true"] b { transform: rotate(225deg) translate(-1px, -1px); }
+.user-menu-list button, .user-menu-list span, .topbar .user-menu-list span { color: #161b22; }
+.user-menu-list button:hover, .user-menu-list button:focus-visible { color: #161b22; background: #fff1ef; }
+.user-menu-list button.active { background: #ffe3df; color: #161b22; box-shadow: inset 3px 0 0 #e93628; }
+.user-menu-list small, .user-menu-list button.active span, .user-menu-list button.active small { color: #161b22; }
+
+.topbar .user-menu { margin-left: auto; }
+
+@media (max-width: 860px) { .topbar .user-menu { position: absolute; right: 20px; margin-left: 0; } }
