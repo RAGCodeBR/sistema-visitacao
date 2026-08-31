@@ -67,6 +67,7 @@ const PIN_ACCOUNTS = {
   "4": { email: "pin-4@agroverde.local", name: "Consultor 3" },
   "5": { email: "pin-5@agroverde.local", name: "Consultor 4" },
   "6": { email: "pin-6@agroverde.local", name: "Assistente" },
+  "7": { email: "pin-7@agroverde.local", name: "LA Business" },
 };
 
 function AccessCard({ children, title, subtitle }) { return <main className="source-access"><section className="source-access-card"><img src={logoAgroVerdeSemFundo} alt="AgroVerde" /><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}{children}</section></main>; }

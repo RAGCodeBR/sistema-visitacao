@@ -1,12 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 
-const url = process.env.SUPABASE_URL;
+const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const secret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const resetPasswords = process.argv.includes("--reset-passwords");
 
 if (!url || !secret) {
-  throw new Error("Defina SUPABASE_URL e SUPABASE_SECRET_KEY no terminal antes de executar este script.");
+  throw new Error("Defina VITE_SUPABASE_URL (ou SUPABASE_URL) e SUPABASE_SECRET_KEY antes de executar este script.");
 }
 
 const users = [
@@ -16,6 +16,7 @@ const users = [
   { pin: "4", name: "Consultor 3", role: "OPERACIONAL" },
   { pin: "5", name: "Consultor 4", role: "OPERACIONAL" },
   { pin: "6", name: "Assistente", role: "OPERACIONAL" },
+  { pin: "7", name: "LA Business", role: "ADMIN" },
 ];
 
 const admin = createClient(url, secret, { auth: { autoRefreshToken: false, persistSession: false } });

@@ -8,6 +8,7 @@ PINs definidos:
 - `4` — Consultor 3
 - `5` — Consultor 4
 - `6` — Assistente
+- `7` — LA Business (admin de teste)
 
 ## 1. Aplicar a migration
 

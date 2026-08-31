@@ -4,8 +4,8 @@
   "private": true,
   "description": "Sistema de visitas comerciais da AgroVerde.",
   "scripts": {
-    "dev": "vite",
-    "start": "vite",
+    "dev": "vite --config vite.source.config.js",
+    "start": "vite --config vite.source.config.js",
     "preview": "vite preview",
     "dev:source": "vite --config vite.source.config.js",
     "build:source": "vite build --config vite.source.config.js",
