@@ -10,7 +10,7 @@ import "./user-menu.css";
 import "./user-menu-refinement.css";
 import "./schedule-spacing.css";
 import "./font.css";
-import logoAgroVerde from "../../assets/therapeutica-logo-CzbDnZIh.png";
+import logoAgroVerde from "../../assets/agroverde-logo.png";
 import { BR_STATES, CITIES_BY_STATE } from "./brazil-locations";
 
 const STORAGE_KEY = "agroverde-operacao-v3";
