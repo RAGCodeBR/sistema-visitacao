@@ -1,2 +1,5 @@
 node_modules/
 dist-source/
+.env.local
+.env.*.local
+supabase/.temp/

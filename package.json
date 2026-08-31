@@ -12,6 +12,7 @@
     "preview:source": "vite preview --config vite.source.config.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
