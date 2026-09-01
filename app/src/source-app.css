@@ -7,3 +7,4 @@
 .row-actions .icon-btn.danger{width:34px;min-height:34px;padding:0;border:0;border-radius:8px;background:var(--surface-2);color:var(--coral);font-size:17px;font-weight:800;transition:none}.row-actions .icon-btn.danger:hover,.row-actions .icon-btn.danger:focus-visible{background:#f8fafc;color:var(--brand-strong);transform:none;box-shadow:none}.row-actions .icon-btn.danger:after{content:none}
 .inline-form>.primary[type=submit]{margin-top:12px}
 .toolbar.source-week-bar{align-items:end}.toolbar.source-week-bar>div{display:grid;gap:7px}.toolbar.source-week-bar>div>label{margin:0}.toolbar.source-week-bar>.primary{align-self:end}
+.toolbar>.primary,.toolbar>.ghost.small-action,.inline-form .row-actions>.primary,.inline-form .row-actions>.ghost.small-action{min-height:34px;padding:0 10px;font-size:inherit}
