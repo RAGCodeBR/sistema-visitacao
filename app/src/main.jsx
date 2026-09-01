@@ -69,11 +69,11 @@ function OwnPasswordForm({ onClose }) {
 
 const PIN_ACCOUNTS = {
   "1": { email: "pin-1@agroverde.local", name: "Emily" },
-  "2": { email: "pin-2@agroverde.local", name: "Consultor 1" },
-  "3": { email: "pin-3@agroverde.local", name: "Consultor 2" },
-  "4": { email: "pin-4@agroverde.local", name: "Consultor 3" },
-  "5": { email: "pin-5@agroverde.local", name: "Consultor 4" },
-  "6": { email: "pin-6@agroverde.local", name: "Assistente" },
+  "2": { email: "pin-2@agroverde.local", name: "Deni" },
+  "3": { email: "pin-3@agroverde.local", name: "Fabian" },
+  "4": { email: "pin-4@agroverde.local", name: "Luan" },
+  "5": { email: "pin-5@agroverde.local", name: "Pedro" },
+  "6": { email: "pin-6@agroverde.local", name: "Ryan" },
   "7": { email: "pin-7@agroverde.local", name: "LA Business" },
 };
 
