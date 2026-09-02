@@ -15,3 +15,4 @@
 .source-schedule-toolbar .source-period-tabs{width:min(100%,300px);margin:0}.source-schedule-toolbar .source-period-tabs button{min-height:34px;font-size:13px}
 .source-period-reference{display:grid;gap:7px;min-width:180px}.source-period-reference label{margin:0}
 .toolbar.source-schedule-toolbar{align-items:end}.toolbar.source-schedule-toolbar>.source-period-tabs,.toolbar.source-schedule-toolbar>.primary{align-self:end}
+.source-calendar-months{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}.source-calendar-months button{min-height:40px;border:0;border-radius:7px;background:transparent;color:var(--text);font:inherit;text-transform:capitalize}.source-calendar-months button:hover,.source-calendar-months button.selected{background:var(--coral);color:#fff}
