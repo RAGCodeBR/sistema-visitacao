@@ -12,3 +12,6 @@
 .source-user-search{flex:1;max-width:360px;margin:0}.source-user-search input{min-height:34px;padding:7px 10px;font-size:13px}.source-user-search:focus-within{border-color:var(--focus);box-shadow:0 0 0 3px #155eef21}.source-user-search input:focus,.source-user-search input:focus-visible{border-color:transparent;box-shadow:none;outline:0}
 .row-card .row-actions{gap:12px}
 .inline-form>.row-actions{margin-top:16px}
+.source-schedule-toolbar .source-period-tabs{width:min(100%,300px);margin:0}.source-schedule-toolbar .source-period-tabs button{min-height:34px;font-size:13px}
+.source-period-reference{display:grid;gap:7px;min-width:180px}.source-period-reference label{margin:0}
+.toolbar.source-schedule-toolbar{align-items:end}.toolbar.source-schedule-toolbar>.source-period-tabs,.toolbar.source-schedule-toolbar>.primary{align-self:end}
