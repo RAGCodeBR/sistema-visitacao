@@ -142,7 +142,7 @@ function App({ profile }) {
     const next = updater(data);
     if (next === data) return setNotice("Operação não realizada: existem registros vinculados.");
     const added = (before, after) => after.find((item) => !before.some((old) => old.id === item.id));
-    const removed = (before, after) => before.find((item) => !after.some((item) => item.id === old.id));
+    const removed = (before, after) => before.find((item) => !after.some((candidate) => candidate.id === item.id));
     const changed = (before, after) => after.find((item) => { const old = before.find((candidate) => candidate.id === item.id); return old && JSON.stringify(old) !== JSON.stringify(item); });
     try {
       const client = added(data.clients, next.clients); const deletedClient = removed(data.clients, next.clients); const editedClient = changed(data.clients, next.clients);
