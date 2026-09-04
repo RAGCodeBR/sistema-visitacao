@@ -324,4 +324,10 @@ function ReportsWithFilters({ data, clients, farms }) {
 }
 
 Clients = ClientsWithHistory; Farms = FarmsWithHistory; Schedule = ScheduleWithExplicitPeriod; VisitForm = VisitFormWithHistory; Reports = ReportsWithFilters;
-createRoot(document.getElementById("root")).render(<React.StrictMode><AuthenticatedApp /></React.StrictMode>);
+class RenderErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { failed: false }; }
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(error) { console.error("Erro de renderização AgroVerde:", error); }
+  render() { if (this.state.failed) return <main className="source-access"><section className="source-access-card"><img src={logoAgroVerdeSemFundo} alt="AgroVerde" /><h1>Não foi possível abrir esta tela</h1><p>Atualize a página para carregar a versão mais recente.</p><button className="primary wide" onClick={() => window.location.reload()}>Atualizar página</button></section></main>; return this.props.children; }
+}
+createRoot(document.getElementById("root")).render(<React.StrictMode><RenderErrorBoundary><AuthenticatedApp /></RenderErrorBoundary></React.StrictMode>);
