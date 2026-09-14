@@ -33,7 +33,10 @@ const dateLabel = (value) => new Date(`${String(value).slice(0, 10)}T12:00:00`).
 function mondayOf(value = new Date()) { const date = new Date(value); if (typeof value === "string") return date.toISOString().slice(0, 10); const day = date.getDay() || 7; date.setDate(date.getDate() - day + 1); date.setHours(0, 0, 0, 0); return date.toISOString().slice(0, 10); }
 function inWeek(value, selectedDate) { const start = new Date(`${selectedDate}T00:00:00`); const day = start.getDay() || 7; start.setDate(start.getDate() - day + 1); const end = new Date(start); end.setDate(start.getDate() + 7); const date = new Date(`${String(value).slice(0, 10)}T00:00:00`); return date >= start && date < end; }
 const clientLabel = (item, clients) => clients.get(item.clientId)?.name || item.clientName || "Cliente excluído";
-const farmLabel = (item, farms) => farms.get(item.farmId)?.name || item.farmName || "Fazenda excluída";
+const farmLabel = (item, farms) => {
+  if (!item?.farmId && !item?.farmName) return "Nenhuma fazenda vinculada";
+  return farms.get(item.farmId)?.name || item.farmName || "Fazenda excluída";
+};
 
 function normalize(raw) {
   const source = raw && typeof raw === "object" ? raw : EMPTY;
