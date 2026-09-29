@@ -71,6 +71,22 @@ export async function markPlanNotDone(id, reason, note = "") {
   if (error) throw error;
 }
 
+export async function deletePlan(id) {
+  const { data: linkedVisits, error: lookupError } = await supabase
+    .from("visits")
+    .select("id")
+    .eq("plan_id", id)
+    .limit(1);
+
+  if (lookupError) throw lookupError;
+  if (linkedVisits?.length) {
+    throw new Error("Esta programação possui uma visita registrada e não pode ser excluída como duplicada.");
+  }
+
+  const { error } = await supabase.from("weekly_plans").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function createVisit(input, userId) {
   await assertVisitIsUnique(input);
   const { data, error } = await supabase.from("visits").insert({
