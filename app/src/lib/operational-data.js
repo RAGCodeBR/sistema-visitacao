@@ -1,6 +1,29 @@
 import { supabase } from "./supabase";
 
 const required = (result) => { if (result.error) throw result.error; return result.data || []; };
+const DUPLICATE_PLAN_MESSAGE = "Já existe uma programação idêntica para este consultor, cliente, fazenda e data.";
+const DUPLICATE_VISIT_MESSAGE = "Já existe uma visita registrada para este consultor, cliente, fazenda e data.";
+
+const withFarm = (query, farmId) => farmId ? query.eq("farm_id", farmId) : query.is("farm_id", null);
+
+export async function ensurePlanIsUnique(input) {
+  let query = supabase.from("weekly_plans").select("id").eq("consultant_id", input.userId).eq("client_id", input.clientId).eq("scheduled_date", input.scheduledDate).limit(1);
+  query = withFarm(query, input.farmId);
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  if (data) throw new Error(DUPLICATE_PLAN_MESSAGE);
+}
+
+async function assertVisitIsUnique(input) {
+  const date = String(input.visitedAt).slice(0, 10);
+  const nextDate = new Date(`${date}T00:00:00.000Z`);
+  nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+  let query = supabase.from("visits").select("id").eq("consultant_id", input.userId).eq("client_id", input.clientId).gte("visited_at", `${date}T00:00:00.000Z`).lt("visited_at", nextDate.toISOString()).limit(1);
+  query = withFarm(query, input.farmId);
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  if (data) throw new Error(DUPLICATE_VISIT_MESSAGE);
+}
 
 export async function loadOperationalData() {
   const [clientsResult, farmsResult, plansResult, visitsResult, profilesResult] = await Promise.all([
@@ -26,6 +49,7 @@ export async function updateFarm(id, input) { const { error } = await supabase.f
 export async function deleteFarm(id) { const { error } = await supabase.from("farms").delete().eq("id", id); if (error) throw error; }
 
 export async function createPlan(input, userId) {
+  await ensurePlanIsUnique(input);
   const { data, error } = await supabase.from("weekly_plans").insert({
     consultant_id: input.userId,
     client_id: input.clientId,
@@ -48,6 +72,7 @@ export async function markPlanNotDone(id, reason, note = "") {
 }
 
 export async function createVisit(input, userId) {
+  await assertVisitIsUnique(input);
   const { data, error } = await supabase.from("visits").insert({
     consultant_id: input.userId,
     plan_id: input.planId || null,
