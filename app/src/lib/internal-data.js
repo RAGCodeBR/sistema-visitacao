@@ -53,13 +53,20 @@ export async function createInternalClient(input, userId) {
     whatsapp: input.whatsapp || null,
     brand_preferences: input.brandPreferences || null,
     characteristics: input.characteristics || null,
-    created_by: userId,
+    created_by: input.ownerId || userId,
   }).select().single();
   if (error) throw error;
   return mapClient(data);
 }
 
-export async function updateInternalClient(id, input) {
+export async function updateInternalClient(id, input, currentOwnerId) {
+  if (input.ownerId && input.ownerId !== currentOwnerId) {
+    const { error: ownerError } = await supabase.rpc("reassign_internal_client", {
+      p_client_id: id,
+      p_employee_id: input.ownerId,
+    });
+    if (ownerError) throw ownerError;
+  }
   const { error } = await supabase.from("internal_clients").update({
     name: input.name,
     property_name: input.propertyName || null,
