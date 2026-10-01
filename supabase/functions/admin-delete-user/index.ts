@@ -15,13 +15,15 @@ Deno.serve(async (req) => {
   const { userId } = await req.json();
   const { data: target } = await db.from("profiles").select("id, role").eq("id", userId).maybeSingle();
   if (!target) return reply({ error: "Usuário não encontrado." }, 404);
-  if (target.role !== "OPERACIONAL") return reply({ error: "Somente usuários operacionais podem ser excluídos." }, 403);
+  if (!["OPERACIONAL", "INTERNO"].includes(target.role)) return reply({ error: "Somente usuários operacionais ou internos podem ser excluídos." }, 403);
 
   const checks = await Promise.all([
     db.from("clients").select("id", { count: "exact", head: true }).eq("created_by", userId),
     db.from("farms").select("id", { count: "exact", head: true }).eq("created_by", userId),
     db.from("weekly_plans").select("id", { count: "exact", head: true }).or(`consultant_id.eq.${userId},created_by.eq.${userId}`),
     db.from("visits").select("id", { count: "exact", head: true }).or(`consultant_id.eq.${userId},created_by.eq.${userId}`),
+    db.from("internal_clients").select("id", { count: "exact", head: true }).eq("created_by", userId),
+    db.from("internal_contacts").select("id", { count: "exact", head: true }).or(`employee_id.eq.${userId},created_by.eq.${userId}`),
   ]);
   if (checks.some(({ count, error }) => error || (count || 0) > 0)) return reply({ error: "Este usuário possui registros vinculados e não pode ser excluído." }, 409);
 
