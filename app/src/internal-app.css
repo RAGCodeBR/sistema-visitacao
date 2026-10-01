@@ -5,6 +5,7 @@
 .internal-app .topbar>div>span{color:#176c56}
 .internal-app .source-notice{border-color:#9ed8c6;background:#ecfaf5;color:#155b49}
 .internal-app .source-pagination-page.active{border-color:#176c56;background:#176c56}.internal-app .source-pagination button:hover:not(:disabled),.internal-app .source-pagination button:focus-visible{border-color:#176c56;color:#176c56}
+.internal-app .source-client-combobox-options button.selected{background:#e9f7f2;color:#176c56}
 .internal-overdue{background:#fff0ed;color:#b44235}
 .internal-row-overdue{margin:0 -10px;padding-right:10px;padding-left:10px;border-radius:8px;background:#fff8f6}
 .internal-agenda-toolbar{align-items:end;justify-content:space-between}
