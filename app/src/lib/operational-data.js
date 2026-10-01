@@ -1,6 +1,16 @@
 import { supabase } from "./supabase";
 
 const required = (result) => { if (result.error) throw result.error; return result.data || []; };
+const DATABASE_PAGE_SIZE = 1000;
+const loadAllRows = async (table, orderBy, ascending = true) => {
+  const rows = [];
+  for (let from = 0; ; from += DATABASE_PAGE_SIZE) {
+    const result = await supabase.from(table).select("*").order(orderBy, { ascending }).order("id").range(from, from + DATABASE_PAGE_SIZE - 1);
+    const page = required(result);
+    rows.push(...page);
+    if (page.length < DATABASE_PAGE_SIZE) return rows;
+  }
+};
 const DUPLICATE_PLAN_MESSAGE = "Já existe uma programação idêntica para este consultor, cliente, fazenda e data.";
 const DUPLICATE_VISIT_MESSAGE = "Já existe uma visita registrada para este consultor, cliente, fazenda e data.";
 
@@ -26,17 +36,17 @@ async function assertVisitIsUnique(input) {
 }
 
 export async function loadOperationalData() {
-  const [clientsResult, farmsResult, plansResult, visitsResult, profilesResult] = await Promise.all([
-    supabase.from("clients").select("*").order("created_at"),
-    supabase.from("farms").select("*").order("created_at"),
-    supabase.from("weekly_plans").select("*").order("scheduled_date"),
-    supabase.from("visits").select("*").order("visited_at", { ascending: false }),
+  const [clientRows, farmRows, planRows, visitRows, profilesResult] = await Promise.all([
+    loadAllRows("clients", "created_at"),
+    loadAllRows("farms", "created_at"),
+    loadAllRows("weekly_plans", "scheduled_date"),
+    loadAllRows("visits", "visited_at", false),
     supabase.from("profiles").select("id, full_name, role").order("full_name"),
   ]);
-  const clients = required(clientsResult).map((row) => ({ id: row.id, name: row.name, phone: row.phone || "", whatsapp: row.whatsapp || "", city: row.city || "", state: row.state || "", mainActivity: row.main_activity || "", notes: row.notes || "", createdBy: row.created_by }));
-  const farms = required(farmsResult).map((row) => ({ id: row.id, name: row.name, clientId: row.client_id, city: row.city || "", state: row.state || "", mainActivity: row.main_activity || "", notes: row.notes || "", createdBy: row.created_by }));
-  const plans = required(plansResult).map((row) => ({ id: row.id, userId: row.consultant_id, clientId: row.client_id, farmId: row.farm_id, scheduledDate: row.scheduled_date, status: row.status, notDoneReason: row.not_done_reason || "", notDoneNote: row.not_done_note || "", createdBy: row.created_by }));
-  const visits = required(visitsResult).map((row) => ({ id: row.id, userId: row.consultant_id, planId: row.plan_id, clientId: row.client_id, farmId: row.farm_id, visitedAt: row.visited_at, developed: row.developed, types: row.types, businessType: row.business_type || "", saleValue: Number(row.sale_value) || 0, nextAction: row.next_action || "", createdBy: row.created_by }));
+  const clients = clientRows.map((row) => ({ id: row.id, name: row.name, phone: row.phone || "", whatsapp: row.whatsapp || "", city: row.city || "", state: row.state || "", mainActivity: row.main_activity || "", notes: row.notes || "", createdBy: row.created_by }));
+  const farms = farmRows.map((row) => ({ id: row.id, name: row.name, clientId: row.client_id, city: row.city || "", state: row.state || "", mainActivity: row.main_activity || "", notes: row.notes || "", createdBy: row.created_by }));
+  const plans = planRows.map((row) => ({ id: row.id, userId: row.consultant_id, clientId: row.client_id, farmId: row.farm_id, scheduledDate: row.scheduled_date, status: row.status, notDoneReason: row.not_done_reason || "", notDoneNote: row.not_done_note || "", createdBy: row.created_by }));
+  const visits = visitRows.map((row) => ({ id: row.id, userId: row.consultant_id, planId: row.plan_id, clientId: row.client_id, farmId: row.farm_id, visitedAt: row.visited_at, developed: row.developed, types: row.types, businessType: row.business_type || "", saleValue: Number(row.sale_value) || 0, nextAction: row.next_action || "", createdBy: row.created_by }));
   const users = required(profilesResult).map((row) => ({ id: row.id, name: row.full_name, role: row.role }));
   return { clients, farms, plans, visits, users };
 }

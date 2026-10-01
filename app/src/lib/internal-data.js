@@ -1,6 +1,17 @@
 import { supabase } from "./supabase";
 
 const required = (result) => { if (result.error) throw result.error; return result.data || []; };
+const DATABASE_PAGE_SIZE = 1000;
+
+const loadAllRows = async (table, orderBy, ascending = true) => {
+  const rows = [];
+  for (let from = 0; ; from += DATABASE_PAGE_SIZE) {
+    const result = await supabase.from(table).select("*").order(orderBy, { ascending }).order("id").range(from, from + DATABASE_PAGE_SIZE - 1);
+    const page = required(result);
+    rows.push(...page);
+    if (page.length < DATABASE_PAGE_SIZE) return rows;
+  }
+};
 
 const mapClient = (row) => ({
   id: row.id,
@@ -33,14 +44,14 @@ const mapContact = (row) => ({
 });
 
 export async function loadInternalData() {
-  const [clientsResult, contactsResult, profilesResult] = await Promise.all([
-    supabase.from("internal_clients").select("*").order("name"),
-    supabase.from("internal_contacts").select("*").order("planned_date", { ascending: false }),
+  const [clientRows, contactRows, profilesResult] = await Promise.all([
+    loadAllRows("internal_clients", "name"),
+    loadAllRows("internal_contacts", "planned_date", false),
     supabase.from("profiles").select("id, full_name, role").in("role", ["INTERNO", "ADMIN"]).order("full_name"),
   ]);
   return {
-    clients: required(clientsResult).map(mapClient),
-    contacts: required(contactsResult).map(mapContact),
+    clients: clientRows.map(mapClient),
+    contacts: contactRows.map(mapContact),
     users: required(profilesResult).map((row) => ({ id: row.id, name: row.full_name, role: row.role })),
   };
 }
